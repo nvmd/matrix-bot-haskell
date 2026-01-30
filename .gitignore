@@ -1,0 +1,10 @@
+data
+
+.DS_Store
+.direnv
+
+# nix
+result
+
+# haskell
+dist-newstyle
