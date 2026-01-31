@@ -7,6 +7,8 @@
 
 module Main where
 
+import System.IO
+
 import Control.Monad.IO.Class (MonadIO, liftIO)
 
 
@@ -32,6 +34,8 @@ import MatrixClient as MC
 
 main :: IO ()
 main = do
+  hSetBuffering stdin LineBuffering
+  hSetBuffering stdout LineBuffering
 
   MC.run
 
