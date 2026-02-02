@@ -39,12 +39,7 @@ run = do
   Right filterId <- createFilter sess userId messageFilter
   filter <- getFilter sess userId filterId
 
-  let printEvent re = case reContent re of
-        (EventRoomMessage (RoomMessageText mt)) -> do
-          printerApi api $ (T.pack quotePreamble) <> unAuthor (reSender re) <> ": " <> (mtBody mt)
-          TIO.putStrLn $ unAuthor (reSender re) <> ": " <> (mtBody mt) <> " <<< " <> (T.pack $ show re) <> " >>> "
-        _ -> TIO.putStrLn $ T.pack $ show re
-  let printRoomEvent room event = TIO.putStr room >> putStr "| " >> printEvent event
+  let printRoomEvent room event = printEvent (">>> " <> room <> "| ") event
   let printRoomEvents (RoomID room, events) = traverse (printRoomEvent room) events
   let printTimelines sr = mapM_ printRoomEvents (getTimelines sr)
 
@@ -58,3 +53,16 @@ run = do
   res <- syncPoll sess filter (Just (srNextBatch syncResult)) (Just Online) printTimelines
 
   return ()
+
+printEvent line re = let
+  printLine body = line <> unAuthor (reSender re) <> ": " <> body <> printRaw
+  printRaw = "\n    {{{\n"
+            <> "        "
+            <> (T.pack $ show re)
+            <> "\n    }}}"
+  in case reContent re of
+    (EventRoomMessage (RoomMessageText mt)) -> do
+      TIO.putStrLn $ printLine (mtBody mt)
+    (EventReaction _ ann) -> do
+      TIO.putStrLn $ printLine $ "reacted with " <> (unAnnotation ann)
+    _ -> TIO.putStrLn $ printRaw
